@@ -1,0 +1,185 @@
+<h1>Project_6 Linux Servers</h1>
+<h2>For the Reviewer
+<ol>
+<li>IP address: &nbsp; Public IP 34.210.72.41</li>
+<li>SSH port: &nbsp; -p 2200</li>
+<li> Complete URL:&nbsp;  ( &nbsp  http://ec2-34-210-72-41.us-west-2.compute.amazonaws.com &nbsp)</li>
+<li> Summary of software installed on Ubuntu server:&nbsp;</h2>
+<h3><ul><li> Apache2 web server</li>
+<li>mod_wsgi for serving Python apps</li>
+<li>GitHub &nbsp to download catalog project,(aka Restaurants)</li>
+<li>python-setuptools</li>
+<li>libapache2-mod-wsgi python-dev</li>
+<li>pip installer</li>
+<li>virtualenv</li>
+<li>In VENV install
+&nbsp <ul>
+    <li>httplib2</li>
+    <li>Flask</li>
+    <li>SQLAlchemy</li>
+    <li>PostgreSQL</li>
+    <li>psycopg</li>
+    <li>Jinja2</li>
+    <li>urllib3</li>
+    <li>Werkzeug</li></ul></h3>
+<h2>List of 3rd party resources: &nbsp;<ul><li> https://github.com/stueken/FSND-P5_Linux-Server-Configuration</li>
+<li> ask ubuntu https://askubuntu.com/questions/138423/how-do-i-change-my-timezone-to-utc-gmt )</li>
+<li> https://raw.githubusercontent.com/stueken/FSND-P5_Linux-Server-Configuration/master/README.md</li>
+</ul></h2>
+
+Project 6, has the student set up a Linux server on Amazons webservice Lightsail. Criteria for project on the Linux (Ubuntu 16.04) based server are:
+1. ability to log into the server as "grader", using the submitted key.
+2. disabling the remote login of the root (Ubuntu in this case) user.
+3. allow the user "grader" sudo access, allow running of commands using sudo and inspection of files readable by root
+4. Set firewall port configurations to allow SSH(port 2200), HTTP (port 80) and NTP (port 123)
+5. SSH is on non-default port
+6. RSA keys required for authentication
+7. all applications updated
+8. web server responds on port 80
+9. Database server configured with PostgreSQL
+10. web server runs Project 4 (Catalog application/ Restaurant catalog) as a WSGI (Web Server Gateway Interface) app
+11. Change time to UTC (Coordinated Universal Time)
+
+Start your Amazon lightsail account, Sign in at https://aws.amazon.com
+
+Scroll over Products in the top pull down menu and select under Compute Amazon Lightsail (4th one down, currently). This brings you to the Sign up page. Sign in (or up) to access your resources page. Follow Amazon's explicit instructions and create an instance running an Ubuntu server.
+pulldown Account from menu and select acount from the pull down. Next to profile select SSH keyes and follow the instrustions to create (or choose) a new key pair for the region.
+
+Place the private key into the file ~/.ssh/:
+$ mv ~/Downloads/udacity_key.rsa ~/.ssh/
+
+Change rwx (read, write, execute) permissions so only "owner" can manipulate.
+
+$ chmod 600 ~/.ssh/udacity_key.rsa
+
+
+
+Click on this instance to bring you to the connection page, connect using SSH (Secure Shell).
+Update all pkgs  $ sudo apt-get update
+                 $ sudo apt_get upgrade
+Create new user  $ addused grader
+Open sudo config. $ visudo
+change grader permissions  $ root All...
+$ grader ALL=(ALL:ALL) ALL
+
+Change ports and configure SSH access
+open config file: $ vim/etc/ssh/sshd_config  & change to port 2200
+
+Temporarily change Password Auth
+<ul><li>  $ PasswordAuthentication  from "no" to "yes"</li>
+<li>Change $ useDNS no
+<li>Change $ AllowUsers grader</li></ul>
+Change root login permissions
+$ PermitRootLogin  from  without-password to "no"
+Restart SSH service $ /etc/init.d/ssh restart
+
+
+<p>Login to the server as the new user
+$  ec2-34-210-72-41.us-west-2.compute.amazonaws.com -p 2200
+Open SSHD config and change Password Auth back to 'no'</p>
+
+<p>Configure incoming connections (UFW) Uncomplicated firewall
+<ul><li>SSH   $ sudo ufw allow 2200/tcp </li>
+<li>HTTP  $ sudo ufw allow 80/tcp</li>
+<li>NTP   $ sudo ufw allow 123/udp </li></ul></p>
+
+Change timezone to UTC  *(credited to ask ubuntu https://askubuntu.com/questions/138423/how-do-i-change-my-timezone-to-utc-gmt )
+$ sudo dpkg-reconfigure tzdata
+scroll to bottom of continents and select none of the above,
+in second list select UTC
+
+
+Install Apache web server
+<ul><li> $ sudo apt-get install apache2</li>
+<li> $ sudo apt-get install python-setuptools libapache2-mod-wsgi</li>
+<li> $ sudo service apache2 restart</li>
+<li> $ echo "ServerName HOSTNAME" | sudo tee /etc/apache2/conf-available/fqdn.conf</li>
+<li> $ sudo a2enconf fqdn</li></ul>
+
+<p>Install GIT
+<ul><li> $ sudo apt-get install git</li>
+<li> $ git config --global user.name "markm1198"</li>
+<li> $ git config --global user.email "mark1198@sbcglobal.net"</li></ul>
+</p>
+<p>Setup Flask with packages that enable Apache2 to serve Flask apps
+<ul><li> $ sudo apt-get install libapache2-mod-wsgi python-dev</li>
+<li> $ sudo a2enmod wsgi</li>
+<li> $ cd /var/www</li>
+<li> $ sudo mkdir catalog  (create a directory for the app)</li>
+<li> $ cd catalog </li>
+<li> $ sudo mkdir catalog (create another directory, 'catalog' and move into it)</li>
+<li> $ cd catalog</li>
+<li> $ sudo mkdir static templates</li>
+<li> $ sudo nano __init__.py (file for the flask app)</li>
+<li> $ python from flask import Flask app = Flask(__name__) @app.route("/") def hello(): return "Veni vidi vici!!" if __name__ == "__main__": app.run()</li>
+<li> $ sudo apt-get install python-pip (pip installer)</li>
+<li> $ sudo virtualenv venv</li>
+<li> $ sudo chmod -R 777 venv (allow all permissions in venv)</li>
+<li> $ source venv/bin/activate</li>
+<li> (venv)$ pip install Flask (working in virtual environment now, (venv) will be omitted from here on out)</li>
+<li> $ python __init__.py</li>
+<li> $ deactivate (deactivte the environment)</li>
+<li> $ sudo nano /etc/apache2/sites-available/catalog.conf (new virtual host instance) </li>
+</ul> Paste the following lines, changing addresses and directory names as required (I've left it with anonymous so I can reuse it in other instances)
+ <p> <ul><li>VirtualHost *:80 ()
+      <li>ServerName PUBLIC-IP-ADDRESS
+      <li>ServerAdmin admin@PUBLIC-IP-ADDRESS
+      <li>WSGIScriptAlias / /var/www/catalog/catalog.wsgi
+      <li>Directory /var/www/catalog/catalog/
+          <li>Order allow,deny
+          <li>Allow from all
+      <li>Directory
+      <li>Alias /static /var/www/catalog/catalog/static
+      <li>Directory /var/www/catalog/catalog/static/
+          <li>Order allow,deny
+        <li>  Allow from all
+      <li>Directory
+      <li>ErrorLog ${APACHE_LOG_DIR}/error.log
+    <li> LogLevel warn
+      <li>CustomLog ${APACHE_LOG_DIR}/access.log combined
+     <li>VirtualHost<ul></p>
+
+  $ sudo a2ensite catalog  (enables virtual host)
+   $ cd /var/www/catalog
+     $ sudo vim catalog.wsgi  (restarts Apache and creates the .wsgi file)
+     paste in the code/; #!/usr/bin/python
+  import sys
+  import logging
+  logging.basicConfig(stream=sys.stderr)
+  sys.path.insert(0,"/var/www/catalog/")
+
+  from catalog import app as application
+  application.secret_key = 'Add your secret key'
+
+<ul>
+<li>  $ sudo service apache2 (restarts the Apache server)</li>
+<li>$ git clone https://github.com/https://github.com/markm1198/Restaurants_project_4.git</li>
+<li>Move all content of created Restaurants_project_4 directory to /var/www/catalog/catalog/-directory and delete the leftover empty directory</li>
+<li> $ cd /var/www/catalog/</li>
+<li> $ sudo vim .htaccess  opens and creates .htaccess file</li>
+<li> $ RedirectMatch 404 /\.git</li>
+</ul>
+<p> Activate venv and install requirements
+<ul><li>$ source venv/bin/activate </li>
+<li>(venv)$  pip install -r requirements.txt (venv env is now assumed, requirements.txt is a file in Restaurants_project_4 with the required pkges.)</li>
+<li>$ sudo apt-get install postgresql postgresql-contrib</li>
+<li> $ sudo vim /etc/postgresql/9.3/main/pg_hba.conf  default remote connections are not allowed</li>
+<li> $ sudo vim database_setup.py</li>
+<li> python engine = create_engine('postgresql://catalog:Passwd@localhost/catalog')</li>
+<li> $ mv project.py __init__.py</li>
+<li> $ sudo adduser catalog</li>
+<li> $ sudo su - postgre    (changes default user to postgres)</li>
+<li> $ psql   connects to server</li>
+<li># CREATE USER catalog WITH PASSWORD 'PW-FOR-DB';  (now in posgres env)</li>
+<li># ALTER USER catalog CREATEDB;  (changes user to create tables)</li>
+<li># CREATE DATABASE catalog WITH OWNER catalog;</li>
+<li># \c catalog;  (connects to the db catalog)</li>
+<li># REVOKE ALL ON SCHEMA public FROM public;  (revokes all public rights)</li>
+<li> # GRANT ALL ON SCHEMA public TO catalog;  (limits access)</li>
+<li> # \q   (exit)</li>
+<li> $ exit</li>
+<li> $ python database_setup.py  (create postgres db schema)</li></ul>
+
+Run the application
+<ul><li> $ sudo service apache2 restart </li>
+<li> Open a browser and type in 34.210.72.41 to veiw Restaurants_project_4</lu></ul>
